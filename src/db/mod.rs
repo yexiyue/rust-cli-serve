@@ -1,13 +1,20 @@
-use mongodb::{options::ClientOptions, Client};
+use mongodb::{options::ClientOptions, Client, Database};
 use std::error::Error;
 use tracing::info;
 
-pub async fn init()->Result<Client,Box<dyn Error>>{
-    let client_option=ClientOptions::parse("mongodb://yexiyue:123456@127.0.0.1:27017/cli_db").await.expect("failed to parse");
-    let client=Client::with_options(client_option)?;
-    info!("connect to mongodb success");
-    for name in client.list_database_names(None, None).await?{
-        info!("{}",name);
+#[derive(Debug,Clone)]
+pub struct MongoDB {
+    pub db: Database,
+}
+
+impl MongoDB {
+    pub async fn init() -> Result<Self, Box<dyn Error>> {
+        let client_options =
+            ClientOptions::parse("mongodb://yexiyue:123456@localhost:27017/cli_db").await?;
+        let client = Client::with_options(client_options)?;
+        let db = client.database("cli_db");
+        let name=db.name();
+        info!("Connected to MongoDB db is {name}");
+        Ok(Self { db })
     }
-    Ok(client)
 }
