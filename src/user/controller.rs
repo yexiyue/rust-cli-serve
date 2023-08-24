@@ -1,4 +1,5 @@
 use axum::{response::IntoResponse, Json};
+use tracing::info;
 
 use crate::{server::Server, user::server::Role};
 
@@ -12,6 +13,7 @@ pub struct UserParams {
 }
 
 pub async fn create_user(server: Server<User>, Json(user): Json<UserParams>) -> impl IntoResponse {
+    info!("{:?}", user);
     let res = server
         .create_user(
             user.username,

@@ -1,20 +1,28 @@
-use async_trait::async_trait;
-use axum::{extract::FromRequestParts, http::request::Parts};
+use std::fmt::Display;
+
 use futures::stream::TryStreamExt;
 use mongodb::{
     bson::{doc, DateTime},
     results::InsertOneResult,
-    Collection,
 };
 use serde::{Deserialize, Serialize};
 
-use crate::{db::MongoDB, error::ServerError, server::Server};
+use crate::server::Server;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Role {
     Admin,
     Normal,
 }
+impl Display for Role{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Role::Admin=>write!(f,"Admin"),
+            Role::Normal=>write!(f,"Normal")
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
     username: String,
@@ -22,7 +30,6 @@ pub struct User {
     create_time: DateTime,
     role: Role,
 }
-
 
 impl Server<User> {
     pub async fn create_user(
