@@ -21,3 +21,6 @@ tracing-subscriber = "0.3.17"
 
 [dev-dependencies]
 anyhow = "1.0.75"
+
+[workspace]
+members = ["web"]
