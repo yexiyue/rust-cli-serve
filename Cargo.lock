@@ -608,16 +608,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dioxus-class"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3dde58998ffbc87c0e797200a6d3e7593edf2979d96d9c05c52d33a5b44bef3a"
-dependencies = [
- "dioxus",
- "paste",
-]
-
-[[package]]
 name = "dioxus-core"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -764,16 +754,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.29",
-]
-
-[[package]]
-name = "dioxus-tailwindcss"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5818f21c1847f505b4f7831f9cb6508451eb3d35aefc806a455ac8501ad2a70e"
-dependencies = [
- "dioxus",
- "dioxus-class",
 ]
 
 [[package]]
@@ -1977,12 +1957,6 @@ dependencies = [
  "smallvec",
  "windows-targets",
 ]
-
-[[package]]
-name = "paste"
-version = "1.0.14"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "de3145af08024dea9fa9914f381a17b8fc6034dfb00f3a84013f7ff43f29ed4c"
 
 [[package]]
 name = "pbkdf2"
@@ -3253,7 +3227,6 @@ dependencies = [
  "dioxus",
  "dioxus-free-icons",
  "dioxus-router",
- "dioxus-tailwindcss",
  "dioxus-web",
  "tracing",
  "tracing-wasm",

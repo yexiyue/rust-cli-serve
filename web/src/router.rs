@@ -3,25 +3,32 @@ use dioxus::prelude::*;
 use dioxus_router::prelude::*;
 
 #[rustfmt::skip]
-#[derive(Debug, Clone,PartialEq, Routable)]
-pub enum Router{
-  #[route("/login")]
-  Login{},
+#[derive(Debug, Clone, PartialEq, Routable)]
+pub enum Router {
+    #[route("/")]
+    Home {},
 
-  #[route("/home")]
-  Home{},
+    #[route("/login")]
+    Login {},
 
-  #[route("/:.._path")]
-  NotFound{_path:Vec<String>},
+    #[route("/:..path")]
+    NotFound{path:Vec<String>}
 }
 
 #[inline_props]
-fn NotFound(cx: Scope, _path: Vec<String>) -> Element {
+fn NotFound(cx: Scope, path: Vec<String>) -> Element {
     render!(
-      h1 {
-        class: " text-2xl text-red-500 bg-slate-500",
-        "404 Not Found"
+      div{
+        class: "flex justify-center items-center h-screen w-full flex-col text-center bg-no-repeat bg-cover bg-center",
+        style:"background-image:url(/images/error-bg.png)",
+        h1 {
+          class: " text-4xl",
+          "404 Not Found"
+        }
+        p {
+          class: "text-2xl",
+          "The page you requested could not be found."
+        }
       }
-      p { "The page you requested could not be found." }
     )
 }
