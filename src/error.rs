@@ -1,15 +1,17 @@
-use axum::{response::{IntoResponse, Response}, http::StatusCode};
+use axum::{
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    Json,
+};
+use serde_json::{json, Value};
 
-pub enum ServerError{
-    UserServerError
-}
+#[derive(Debug)]
+pub struct ServerError(pub StatusCode, pub String);
 
-impl IntoResponse for ServerError{
-    fn into_response(self) ->Response {
-        match self{
-            Self::UserServerError=>{
-                (StatusCode::INTERNAL_SERVER_ERROR,"unhandled server error").into_response()
-            }
-        }
+impl IntoResponse for ServerError {
+    fn into_response(self) -> Response {
+        let status = self.0;
+        let body = Json::<Value>(json!({ "code":status.as_u16(),"message":self.1,"error":true }));
+        (status, body).into_response()
     }
 }

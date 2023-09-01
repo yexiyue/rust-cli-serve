@@ -5,12 +5,12 @@ use axum::{
     http::{request::Parts, Request, StatusCode},
     middleware::Next,
     response::Response,
-    response::IntoResponse,
     RequestPartsExt, TypedHeader,
 };
 use jsonwebtoken::{decode, encode, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
-use tracing::info;
+
+use crate::{error::ServerError, ServeResult, server::Server, user::server::User};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -31,43 +31,44 @@ impl Claims {
         }
     }
 
-    pub fn encode(&self) -> Result<String, jsonwebtoken::errors::Error> {
+    pub fn encode(&self) -> ServeResult<String> {
         let token = encode(
             &Header::default(),
             &self,
             &EncodingKey::from_secret(TOKEN_KEY.as_ref()),
-        )?;
+        ).map_err(|_| ServerError(StatusCode::INTERNAL_SERVER_ERROR, "Failed to encode token".to_string()))?;
         Ok(token)
     }
 
-    pub fn decode(token: &str) -> Result<Self, jsonwebtoken::errors::Error> {
+    pub fn decode(token: &str) -> ServeResult<Self> {
         let claims = decode::<Self>(
             token,
             &DecodingKey::from_secret(TOKEN_KEY.as_ref()),
             &Validation::default(),
-        )?;
+        ).map_err(|_| ServerError(StatusCode::INTERNAL_SERVER_ERROR, "Failed to decode token".to_string()))?;
         Ok(claims.claims)
     }
 }
 
 #[async_trait]
 impl<S> FromRequestParts<S> for Claims {
-    type Rejection = StatusCode;
+    type Rejection = ServerError;
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
         let TypedHeader(Authorization(token)) = parts
             .extract::<TypedHeader<Authorization<Bearer>>>()
             .await
             .unwrap();
         let token = token.token();
-        Ok(Self::decode(token).unwrap())
+        Ok(Self::decode(token)?)
     }
 }
-const WHITE_LIST: [&str; 2] = ["/user/login", "/template"];
+const WHITE_LIST: [&str; 2] = ["/user/login", "/template/list"];
 
 pub async fn authorization_middleware<B>(
+    user:Server<User>,
     req: Request<B>,
     next: Next<B>,
-) -> Result<Response, StatusCode> {
+) -> ServeResult<Response>{
     for &i in WHITE_LIST.iter() {
         if req.uri().path().starts_with(i) {
             return Ok(next.run(req).await);
@@ -76,9 +77,13 @@ pub async fn authorization_middleware<B>(
     let token = req.headers().typed_get::<Authorization<Bearer>>();
     if let Some(Authorization(bearer)) = token {
         let token = bearer.token();
-        info!("authorization_middleware {token:?}");
+        let claims=Claims::decode(token)?;
+        let res=user.find_user_by_username(claims.username).await?;
+        if res.is_none(){
+            return Err(ServerError(StatusCode::UNAUTHORIZED,"用户不存在".to_string()));
+        }
     } else {
-        return Ok((StatusCode::UNAUTHORIZED, "Unauthorized Token").into_response());
+        return Err(ServerError(StatusCode::UNAUTHORIZED,"未经许可".to_string()));
     };
 
     Ok(next.run(req).await)
